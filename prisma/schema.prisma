@@ -1,8 +1,63 @@
 generator client {
   provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "sqlite"
+}
+
+enum Platform {
+  STEAM
+  EPIC
+  GOG
+}
+
+model Game {
+  id          String   @id @default(cuid())
+
+  title       String
+  slug        String? 
+
+  coverImage  String? 
+  bannerImage String? 
+
+  description String?
+  releaseDate DateTime?
+  developer   String?
+  publisher   String?
+
+  genres      Genre[]  @relation("GameGenres")
+
+  platforms   GameOnPlatform[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([title])
+}
+
+model GameOnPlatform {
+  id            String   @id @default(cuid())
+
+  game          Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  gameId        String
+
+  platform      Platform
+
+  externalId    String
+
+  playtimeMinutes Int?
+
+  lastSyncedAt  DateTime @default(now())
+
+  @@unique([platform, externalId])
+  @@index([gameId])
+}
+
+model Genre {
+  id    String @id @default(cuid())
+  name  String @unique
+
+  games Game[] @relation("GameGenres")
 }
