@@ -1,4 +1,3 @@
-// src/lib/integrations/steam.ts
 import axios from "axios";
 import { z } from "zod";
 import type { NormalizedGame } from "@/types/game";
@@ -19,7 +18,6 @@ const SteamResponseSchema = z.object({
   }),
 });
 
-// Mock games to return when Steam API is unreachable or in mock mode
 const MOCK_GAMES: NormalizedGame[] = [
   {
     title: "Portal 2",
@@ -98,7 +96,6 @@ export async function fetchSteamLibrary(): Promise<NormalizedGame[]> {
       }),
     );
   } catch (error: any) {
-    // If we hit a network connection error (like ECONNRESET/timeout) and we are in dev, fall back to mock data
     const isNetworkError = 
       error.code === "ECONNRESET" || 
       error.code === "ETIMEDOUT" || 
