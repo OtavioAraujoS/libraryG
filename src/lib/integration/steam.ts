@@ -1,22 +1,9 @@
 import axios from "axios";
-import { z } from "zod";
 import type { NormalizedGame } from "@/types/game";
+import { SteamResponseSchema } from "@/types/steam";
+import { requireEnvVars } from "@/lib/integration/helpers";
 
 const STEAM_API_BASE = "https://api.steampowered.com";
-
-const SteamGameSchema = z.object({
-  appid: z.number(),
-  name: z.string(),
-  playtime_forever: z.number(),
-  img_icon_url: z.string().optional(),
-});
-
-const SteamResponseSchema = z.object({
-  response: z.object({
-    game_count: z.number().optional(),
-    games: z.array(SteamGameSchema).optional(),
-  }),
-});
 
 const MOCK_GAMES: NormalizedGame[] = [
   {
@@ -50,8 +37,6 @@ const MOCK_GAMES: NormalizedGame[] = [
 ];
 
 export async function fetchSteamLibrary(): Promise<NormalizedGame[]> {
-  const apiKey = process.env.STEAM_API_KEY;
-  const steamId = process.env.STEAM_ID;
   const useMock = process.env.STEAM_API_MOCK === "true";
 
   if (useMock) {
@@ -59,9 +44,10 @@ export async function fetchSteamLibrary(): Promise<NormalizedGame[]> {
     return MOCK_GAMES;
   }
 
-  if (!apiKey || !steamId) {
-    throw new Error("STEAM_API_KEY ou STEAM_ID não configurados no .env");
-  }
+  const { STEAM_API_KEY: apiKey, STEAM_ID: steamId } = requireEnvVars(
+    "STEAM_API_KEY",
+    "STEAM_ID"
+  );
 
   try {
     const { data } = await axios.get(
@@ -110,4 +96,3 @@ export async function fetchSteamLibrary(): Promise<NormalizedGame[]> {
     throw error;
   }
 }
-

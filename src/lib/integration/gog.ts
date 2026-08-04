@@ -1,46 +1,29 @@
 import axios from "axios";
-import { z } from "zod";
 import type { NormalizedGame } from "@/types/game";
-
-const TokenResponseSchema = z.object({
-  access_token: z.string(),
-  refresh_token: z.string(),
-});
-
-const OwnedGamesSchema = z.object({
-  owned: z.array(z.number()),
-});
-
-const ProductDetailsSchema = z.object({
-  id: z.number(),
-  title: z.string(),
-  images: z
-    .object({
-      logo2x: z.string().optional(),
-      background: z.string().optional(),
-    })
-    .optional(),
-});
+import {
+  GogTokenResponseSchema,
+  GogOwnedGamesSchema,
+  GogProductDetailsSchema,
+} from "@/types/gog";
+import { requireEnvVars, batchProcess } from "@/lib/integration/helpers";
 
 async function refreshAccessToken(): Promise<string> {
-  const clientId = process.env.GOG_CLIENT_ID;
-  const clientSecret = process.env.GOG_CLIENT_SECRET;
-  const refreshToken = process.env.GOG_REFRESH_TOKEN;
-
-  if (!clientId) throw new Error("GOG_CLIENT_ID não configurado no .env");
-  if (!clientSecret) throw new Error("GOG_CLIENT_SECRET não configurado no .env");
-  if (!refreshToken) throw new Error("GOG_REFRESH_TOKEN não configurado no .env");
+  const { GOG_CLIENT_ID, GOG_CLIENT_SECRET, GOG_REFRESH_TOKEN } = requireEnvVars(
+    "GOG_CLIENT_ID",
+    "GOG_CLIENT_SECRET",
+    "GOG_REFRESH_TOKEN"
+  );
 
   const { data } = await axios.post("https://auth.gog.com/token", null, {
     params: {
-      client_id: clientId,
-      client_secret: clientSecret,
+      client_id: GOG_CLIENT_ID,
+      client_secret: GOG_CLIENT_SECRET,
       grant_type: "refresh_token",
-      refresh_token: refreshToken,
+      refresh_token: GOG_REFRESH_TOKEN,
     },
   });
 
-  const parsed = TokenResponseSchema.safeParse(data);
+  const parsed = GogTokenResponseSchema.safeParse(data);
   if (!parsed.success) {
     throw new Error("Falha ao renovar token de acesso do GOG");
   }
@@ -53,7 +36,7 @@ async function fetchOwnedGameIds(accessToken: string): Promise<number[]> {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
 
-  const parsed = OwnedGamesSchema.safeParse(data);
+  const parsed = GogOwnedGamesSchema.safeParse(data);
   if (!parsed.success) {
     console.error("Resposta inesperada da GOG (owned games):", parsed.error);
     throw new Error("Falha ao validar lista de jogos do GOG");
@@ -71,7 +54,7 @@ async function fetchProductDetails(
       { params: { expand: "images" } },
     );
 
-    const parsed = ProductDetailsSchema.safeParse(data);
+    const parsed = GogProductDetailsSchema.safeParse(data);
     if (!parsed.success) {
       console.warn(`Produto GOG ${productId} com formato inesperado, pulando.`);
       return null;
@@ -95,18 +78,5 @@ export async function fetchGogLibrary(): Promise<NormalizedGame[]> {
   const accessToken = await refreshAccessToken();
   const ownedIds = await fetchOwnedGameIds(accessToken);
 
-  const BATCH_SIZE = 5;
-  const results: NormalizedGame[] = [];
-
-  for (let i = 0; i < ownedIds.length; i += BATCH_SIZE) {
-    const batch = ownedIds.slice(i, i + BATCH_SIZE);
-    const batchResults = await Promise.all(
-      batch.map((id) => fetchProductDetails(id)),
-    );
-    results.push(
-      ...batchResults.filter((g): g is NormalizedGame => g !== null),
-    );
-  }
-
-  return results;
+  return batchProcess(ownedIds, 5, fetchProductDetails);
 }
