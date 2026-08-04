@@ -2,10 +2,6 @@ import axios from "axios";
 import { z } from "zod";
 import type { NormalizedGame } from "@/types/game";
 
-const GOG_CLIENT_ID = "46899977096215655";
-const GOG_CLIENT_SECRET =
-  "9d85c43b1482497dbbce61f6e4aa173a433796eeae2ca2f1e50e3ada9024af9";
-
 const TokenResponseSchema = z.object({
   access_token: z.string(),
   refresh_token: z.string(),
@@ -27,16 +23,18 @@ const ProductDetailsSchema = z.object({
 });
 
 async function refreshAccessToken(): Promise<string> {
+  const clientId = process.env.GOG_CLIENT_ID;
+  const clientSecret = process.env.GOG_CLIENT_SECRET;
   const refreshToken = process.env.GOG_REFRESH_TOKEN;
 
-  if (!refreshToken) {
-    throw new Error("GOG_REFRESH_TOKEN não configurado no .env");
-  }
+  if (!clientId) throw new Error("GOG_CLIENT_ID não configurado no .env");
+  if (!clientSecret) throw new Error("GOG_CLIENT_SECRET não configurado no .env");
+  if (!refreshToken) throw new Error("GOG_REFRESH_TOKEN não configurado no .env");
 
   const { data } = await axios.post("https://auth.gog.com/token", null, {
     params: {
-      client_id: GOG_CLIENT_ID,
-      client_secret: GOG_CLIENT_SECRET,
+      client_id: clientId,
+      client_secret: clientSecret,
       grant_type: "refresh_token",
       refresh_token: refreshToken,
     },
