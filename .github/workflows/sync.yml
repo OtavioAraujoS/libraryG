@@ -23,7 +23,6 @@ jobs:
             exit 1
           fi
 
-          # Remove barra no final da URL caso exista
           CLEAN_URL="${APP_URL%/}/api/sync/all"
 
           echo "🚀 Disparando sincronização para: $CLEAN_URL"
