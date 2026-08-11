@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Platform } from "../../../../generated/prisma/enums";
 import type { Prisma } from "../../../../generated/prisma/client";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: NextRequest) {
   try {
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest) {
       games,
     });
   } catch (error) {
-    console.error("[GET /api/games] erro:", error);
+    logger.error("[GET /api/games]", error);
     return NextResponse.json(
       { success: false, error: "Erro ao buscar jogos." },
       { status: 500 },

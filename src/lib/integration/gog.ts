@@ -6,6 +6,7 @@ import {
   GogProductDetailsSchema,
 } from "@/types/gog";
 import { requireEnvVars, batchProcess } from "@/lib/integration/helpers";
+import { logger } from "@/lib/logger";
 
 async function refreshAccessToken(): Promise<string> {
   const { GOG_CLIENT_ID, GOG_CLIENT_SECRET, GOG_REFRESH_TOKEN } = requireEnvVars(
@@ -38,7 +39,7 @@ async function fetchOwnedGameIds(accessToken: string): Promise<number[]> {
 
   const parsed = GogOwnedGamesSchema.safeParse(data);
   if (!parsed.success) {
-    console.error("Resposta inesperada da GOG (owned games):", parsed.error);
+    logger.error("Resposta inesperada da GOG (owned games)", parsed.error);
     throw new Error("Falha ao validar lista de jogos do GOG");
   }
 
@@ -56,7 +57,7 @@ async function fetchProductDetails(
 
     const parsed = GogProductDetailsSchema.safeParse(data);
     if (!parsed.success) {
-      console.warn(`Produto GOG ${productId} com formato inesperado, pulando.`);
+      logger.warn(`Produto GOG ${productId}: formato inesperado, pulando.`);
       return null;
     }
 
@@ -69,7 +70,7 @@ async function fetchProductDetails(
         : undefined,
     };
   } catch {
-    console.warn(`Falha ao buscar detalhes do produto GOG ${productId}`);
+    logger.warn(`Falha ao buscar detalhes do produto GOG ${productId}`);
     return null;
   }
 }

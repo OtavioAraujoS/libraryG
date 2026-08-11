@@ -2,6 +2,7 @@ import axios from "axios";
 import type { NormalizedGame } from "@/types/game";
 import { SteamResponseSchema } from "@/types/steam";
 import { requireEnvVars } from "@/lib/integration/helpers";
+import { logger } from "@/lib/logger";
 
 const STEAM_API_BASE = "https://api.steampowered.com";
 
@@ -40,7 +41,7 @@ export async function fetchSteamLibrary(): Promise<NormalizedGame[]> {
   const useMock = process.env.STEAM_API_MOCK === "true";
 
   if (useMock) {
-    console.warn("Steam API: Running in MOCK mode.");
+    logger.warn("Steam API: running in MOCK mode.");
     return MOCK_GAMES;
   }
 
@@ -66,7 +67,7 @@ export async function fetchSteamLibrary(): Promise<NormalizedGame[]> {
     const parsed = SteamResponseSchema.safeParse(data);
 
     if (!parsed.success) {
-      console.error("Resposta inesperada da Steam API:", parsed.error);
+      logger.error("Resposta inesperada da Steam API", parsed.error);
       throw new Error("Falha ao validar dados da Steam API");
     }
 
@@ -90,7 +91,7 @@ export async function fetchSteamLibrary(): Promise<NormalizedGame[]> {
       error.message?.includes("Connection was reset");
 
     if (process.env.NODE_ENV === "development" && isNetworkError) {
-      console.warn("Steam API: Network connection failed (firewall block / ECONNRESET). Using MOCK data for development.");
+      logger.warn("Steam API: network connection failed (firewall / ECONNRESET) — using MOCK data.");
       return MOCK_GAMES;
     }
     throw error;
