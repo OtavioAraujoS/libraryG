@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Library, Gamepad2 } from "lucide-react";
+import { SyncButton } from "./SyncButton";
 
 export function HeroBanner({ totalGames }: { totalGames: number }) {
   return (
@@ -34,7 +35,7 @@ export function HeroBanner({ totalGames }: { totalGames: number }) {
           precisar abrir três launchers pra lembrar o que você já tem.
         </p>
 
-        <div className="mt-2 flex items-center gap-4">
+        <div className="mt-2 flex flex-wrap items-center gap-4">
           <Button
             size="lg"
             className="gap-2"
@@ -44,6 +45,8 @@ export function HeroBanner({ totalGames }: { totalGames: number }) {
             <Library className="h-4 w-4" />
             Ver minha biblioteca
           </Button>
+
+          <SyncButton />
 
           {totalGames > 0 && (
             <span className="text-sm text-muted-foreground">
@@ -56,3 +59,4 @@ export function HeroBanner({ totalGames }: { totalGames: number }) {
     </div>
   );
 }
+
