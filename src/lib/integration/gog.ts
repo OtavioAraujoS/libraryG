@@ -79,5 +79,5 @@ export async function fetchGogLibrary(): Promise<NormalizedGame[]> {
   const accessToken = await refreshAccessToken();
   const ownedIds = await fetchOwnedGameIds(accessToken);
 
-  return batchProcess(ownedIds, 5, fetchProductDetails);
+  return batchProcess(ownedIds, 10, fetchProductDetails);
 }

@@ -8,6 +8,8 @@ import { logger } from "@/lib/logger";
 
 import { isAuthorized } from "@/lib/auth";
 
+export const maxDuration = 60;
+
 export async function POST(req: NextRequest) {
   if (!isAuthorized(req, "sync/all")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

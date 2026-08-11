@@ -105,5 +105,5 @@ export async function fetchEpicLibrary(): Promise<NormalizedGame[]> {
   const accessToken = await refreshAccessToken();
   const items = await fetchLibraryItems(accessToken);
 
-  return batchProcess(items, 5, (item) => fetchCatalogItem(accessToken, item));
+  return batchProcess(items, 10, (item) => fetchCatalogItem(accessToken, item));
 }
