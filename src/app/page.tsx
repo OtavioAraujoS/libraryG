@@ -1,97 +1,77 @@
-"use client";
+import { prisma } from "@/lib/prisma";
+import { HeroBanner, StatsCard, PlatformBreakdown } from "@/components/dashboard";
+import { Gamepad2, Layers, Clock } from "lucide-react";
+import { formatPlaytime } from "@/lib/format";
 
-import { useState } from "react";
-import { LayoutGrid, List } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { FilterPanel, GameGrid, SearchBar } from "@/components/games";
-import { useGames, useGenres } from "@/hooks";
-import { cn } from "@/lib/utils";
-import type { ViewMode } from "@/components/games";
+export default async function DashboardPage() {
+  const [totalGames, platformGroups, playtimeAgg] = await Promise.all([
+    prisma.game.count(),
+    prisma.gameOnPlatform.groupBy({
+      by: ["platform"],
+      _count: { _all: true },
+    }),
+    prisma.gameOnPlatform.aggregate({
+      _sum: { playtimeMinutes: true },
+    }),
+  ]);
 
-export default function LibraryPage() {
-  const {
-    games,
-    total,
-    loading,
-    error,
-    searchQuery,
-    setSearchQuery,
-    platforms,
-    setPlatforms,
-    genres,
-    setGenres,
-  } = useGames();
-  const [viewMode, setViewMode] = useState<ViewMode>("grid");
-  const { availableGenres } = useGenres();
+  const platformData = platformGroups.map((g) => ({
+    platform: g.platform,
+    count: g._count._all,
+  }));
+
+  const totalPlatformLinks = platformData.reduce((sum, p) => sum + p.count, 0);
+  const totalMinutes = playtimeAgg._sum.playtimeMinutes ?? 0;
 
   return (
-    <div className="flex flex-col gap-6 px-6 py-8">
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-              Biblioteca
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {loading
-                ? "Carregando..."
-                : `${total} ${total === 1 ? "jogo" : "jogos"}`}
-            </p>
-          </div>
+    <div className="space-y-8 px-6 py-8">
+      <HeroBanner totalGames={totalGames} />
 
-          <div className="flex items-center gap-2">
-            <SearchBar
-              value={searchQuery}
-              onChange={setSearchQuery}
-              className="w-full sm:w-64"
+      {totalGames === 0 ? (
+        <EmptyState />
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <StatsCard
+              label="Jogos únicos"
+              value={totalGames}
+              icon={Gamepad2}
+              accent
             />
-
-            <div className="flex items-center rounded-md border border-border p-0.5">
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-pressed={viewMode === "grid"}
-                aria-label="Visualização em grid"
-                onClick={() => setViewMode("grid")}
-                className={cn(
-                  "h-8 w-8",
-                  viewMode === "grid" && "bg-secondary text-foreground",
-                )}
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-pressed={viewMode === "list"}
-                aria-label="Visualização em lista"
-                onClick={() => setViewMode("list")}
-                className={cn(
-                  "h-8 w-8",
-                  viewMode === "list" && "bg-secondary text-foreground",
-                )}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
+            <StatsCard
+              label="Vínculos de plataforma"
+              value={totalPlatformLinks}
+              icon={Layers}
+            />
+            <StatsCard
+              label="Tempo total jogado"
+              value={formatPlaytime(totalMinutes)}
+              icon={Clock}
+            />
           </div>
-        </div>
 
-        <FilterPanel
-          platforms={platforms}
-          onPlatformsChange={setPlatforms}
-          genres={genres}
-          onGenresChange={setGenres}
-          availableGenres={availableGenres}
-        />
-      </div>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <PlatformBreakdown data={platformData} />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
-      <GameGrid
-        games={games}
-        loading={loading}
-        error={error}
-        viewMode={viewMode}
-      />
+function EmptyState() {
+  return (
+    <div className="rounded-2xl border border-dashed border-border bg-card/50 px-6 py-16 text-center">
+      <p className="text-lg font-medium text-foreground/90">
+        Nenhum jogo sincronizado ainda
+      </p>
+      <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
+        Dispare a sincronização de uma plataforma (ex:{" "}
+        <code className="rounded bg-secondary/30 px-1.5 py-0.5 text-xs">
+          POST /api/sync/steam
+        </code>
+        ) para popular sua biblioteca e ver os números aqui.
+      </p>
     </div>
   );
 }
