@@ -1,10 +1,15 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { fetchSteamLibrary } from "@/lib/integration/steam";
 import { syncGames } from "@/lib/sync";
 import { Platform } from "../../../../../generated/prisma/enums";
 import { logger } from "@/lib/logger";
 
-export async function POST() {
+import { isAuthorized } from "@/lib/auth";
+
+export async function POST(req: NextRequest) {
+  if (!isAuthorized(req, "sync/steam")) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
     const games = await fetchSteamLibrary();
     const result = await syncGames(games, Platform.STEAM, (game) => ({
