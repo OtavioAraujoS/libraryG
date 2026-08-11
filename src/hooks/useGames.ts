@@ -8,7 +8,7 @@ import { UseGamesResult } from "./useGames.types";
 const DEBOUNCE_MS = 350;
 
 export function useGames(): UseGamesResult {
-  const [q, setQ] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [platforms, setPlatforms] = useState<PlatformFilter[]>([]);
   const [genres, setGenres] = useState<string[]>([]);
 
@@ -30,7 +30,7 @@ export function useGames(): UseGamesResult {
 
     try {
       const params: Record<string, string> = {};
-      if (q.trim()) params.q = q.trim();
+      if (searchQuery.trim()) params.q = searchQuery.trim();
       if (platforms.length > 0) params.platform = platforms.join(",");
       if (genres.length > 0) params.genre = genres.join(",");
 
@@ -58,7 +58,7 @@ export function useGames(): UseGamesResult {
         setLoading(false);
       }
     }
-  }, [q, platforms, genres]);
+  }, [searchQuery, platforms, genres]);
 
   const togglePlatform = useCallback((platform: PlatformFilter) => {
     setPlatforms((prev) =>
@@ -77,7 +77,7 @@ export function useGames(): UseGamesResult {
   }, []);
 
   const clearFilters = useCallback(() => {
-    setQ("");
+    setSearchQuery("");
     setPlatforms([]);
     setGenres([]);
   }, []);
@@ -102,8 +102,8 @@ export function useGames(): UseGamesResult {
     total,
     loading,
     error,
-    q,
-    setQ,
+    searchQuery,
+    setSearchQuery,
     platforms,
     setPlatforms,
     togglePlatform,

@@ -5,8 +5,8 @@ export interface UseGamesResult {
   total: number;
   loading: boolean;
   error: string | null;
-  q: string;
-  setQ: (value: string) => void;
+  searchQuery: string;
+  setSearchQuery: (value: string) => void;
   platforms: PlatformFilter[];
   setPlatforms: React.Dispatch<React.SetStateAction<PlatformFilter[]>>;
   togglePlatform: (platform: PlatformFilter) => void;
