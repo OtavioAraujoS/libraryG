@@ -72,11 +72,8 @@ function EmptyState() {
         Nenhum jogo sincronizado ainda
       </p>
       <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-        Dispare a sincronização de uma plataforma (ex:{" "}
-        <code className="rounded bg-secondary/30 px-1.5 py-0.5 text-xs">
-          POST /api/sync/steam
-        </code>
-        ) para popular sua biblioteca e ver os números aqui.
+        Clique no botão &quot;Sincronizar agora&quot; acima para importar seus
+        jogos da Steam, Epic Games e GOG.
       </p>
     </div>
   );
