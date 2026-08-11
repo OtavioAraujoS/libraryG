@@ -2,7 +2,7 @@
 
 import { ChevronDown, Filter } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -80,22 +80,21 @@ export function FilterPanel({
       </div>
 
       <DropdownMenu>
-        <DropdownMenuTrigger>
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5"
-            disabled={availableGenres.length === 0}
-          >
-            <Filter className="h-3.5 w-3.5" />
-            Gênero
-            {genres.length > 0 && (
-              <Badge variant="secondary" className="px-1.5">
-                {genres.length}
-              </Badge>
-            )}
-            <ChevronDown className="h-3.5 w-3.5" />
-          </Button>
+        <DropdownMenuTrigger
+          disabled={availableGenres.length === 0}
+          className={cn(
+            buttonVariants({ variant: "outline", size: "sm" }),
+            "gap-1.5"
+          )}
+        >
+          <Filter className="h-3.5 w-3.5" />
+          Gênero
+          {genres.length > 0 && (
+            <Badge variant="secondary" className="px-1.5">
+              {genres.length}
+            </Badge>
+          )}
+          <ChevronDown className="h-3.5 w-3.5" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-48">
           <DropdownMenuLabel>Filtrar por gênero</DropdownMenuLabel>

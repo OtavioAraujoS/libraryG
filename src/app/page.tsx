@@ -4,7 +4,7 @@ import { useState } from "react";
 import { LayoutGrid, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FilterPanel, GameGrid, SearchBar } from "@/components/games";
-import { useGames } from "@/hooks";
+import { useGames, useGenres } from "@/hooks";
 import { cn } from "@/lib/utils";
 import type { ViewMode } from "@/components/games";
 
@@ -22,8 +22,7 @@ export default function LibraryPage() {
     setGenres,
   } = useGames();
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
-
-  const availableGenres: string[] = [];
+  const { availableGenres } = useGenres();
 
   return (
     <div className="flex flex-col gap-6 px-6 py-8">
@@ -41,7 +40,11 @@ export default function LibraryPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <SearchBar value={searchQuery} onChange={setSearchQuery} className="w-full sm:w-64" />
+            <SearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              className="w-full sm:w-64"
+            />
 
             <div className="flex items-center rounded-md border border-border p-0.5">
               <Button
@@ -52,7 +55,7 @@ export default function LibraryPage() {
                 onClick={() => setViewMode("grid")}
                 className={cn(
                   "h-8 w-8",
-                  viewMode === "grid" && "bg-secondary text-foreground"
+                  viewMode === "grid" && "bg-secondary text-foreground",
                 )}
               >
                 <LayoutGrid className="h-4 w-4" />
@@ -65,7 +68,7 @@ export default function LibraryPage() {
                 onClick={() => setViewMode("list")}
                 className={cn(
                   "h-8 w-8",
-                  viewMode === "list" && "bg-secondary text-foreground"
+                  viewMode === "list" && "bg-secondary text-foreground",
                 )}
               >
                 <List className="h-4 w-4" />

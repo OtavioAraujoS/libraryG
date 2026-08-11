@@ -6,16 +6,18 @@ import {
   EpicCatalogItemSchema,
 } from "@/types/epic";
 import { requireEnvVars, batchProcess } from "@/lib/integration/helpers";
+import { logger } from "@/lib/logger";
 
 async function refreshAccessToken(): Promise<string> {
-  const { EPIC_CLIENT_ID, EPIC_CLIENT_SECRET, EPIC_REFRESH_TOKEN } = requireEnvVars(
-    "EPIC_CLIENT_ID",
-    "EPIC_CLIENT_SECRET",
-    "EPIC_REFRESH_TOKEN"
-  );
+  const { EPIC_CLIENT_ID, EPIC_CLIENT_SECRET, EPIC_REFRESH_TOKEN } =
+    requireEnvVars(
+      "EPIC_CLIENT_ID",
+      "EPIC_CLIENT_SECRET",
+      "EPIC_REFRESH_TOKEN",
+    );
 
   const epicBasicAuth = Buffer.from(
-    `${EPIC_CLIENT_ID}:${EPIC_CLIENT_SECRET}`
+    `${EPIC_CLIENT_ID}:${EPIC_CLIENT_SECRET}`,
   ).toString("base64");
 
   const { data } = await axios.post(
@@ -29,7 +31,7 @@ async function refreshAccessToken(): Promise<string> {
         Authorization: `Basic ${epicBasicAuth}`,
         "Content-Type": "application/x-www-form-urlencoded",
       },
-    }
+    },
   );
 
   const parsed = EpicTokenResponseSchema.safeParse(data);
@@ -41,19 +43,19 @@ async function refreshAccessToken(): Promise<string> {
 }
 
 async function fetchLibraryItems(
-  accessToken: string
+  accessToken: string,
 ): Promise<{ catalogItemId: string; namespace: string }[]> {
   const { data } = await axios.get(
     "https://library-service.live.use1.on.epicgames.com/library/api/public/items",
     {
       headers: { Authorization: `Bearer ${accessToken}` },
       params: { includeMetadata: true },
-    }
+    },
   );
 
   const parsed = EpicLibraryResponseSchema.safeParse(data);
   if (!parsed.success) {
-    console.error("Resposta inesperada da Epic (library items):", parsed.error);
+    logger.error("Resposta inesperada da Epic (library items)", parsed.error);
     throw new Error("Falha ao validar biblioteca da Epic");
   }
 
@@ -62,7 +64,7 @@ async function fetchLibraryItems(
 
 async function fetchCatalogItem(
   accessToken: string,
-  item: { catalogItemId: string; namespace: string }
+  item: { catalogItemId: string; namespace: string },
 ): Promise<NormalizedGame | null> {
   try {
     const { data } = await axios.get(
@@ -76,7 +78,7 @@ async function fetchCatalogItem(
           country: "BR",
           locale: "pt-BR",
         },
-      }
+      },
     );
 
     const catalogData = data[item.catalogItemId];
@@ -84,7 +86,7 @@ async function fetchCatalogItem(
     if (!parsed.success) return null;
 
     const coverImage = parsed.data.keyImages?.find(
-      (img) => img.type === "DieselStoreFrontWide" || img.type === "Thumbnail"
+      (img) => img.type === "DieselStoreFrontWide" || img.type === "Thumbnail",
     )?.url;
 
     return {
@@ -94,7 +96,7 @@ async function fetchCatalogItem(
       coverImage,
     };
   } catch {
-    console.warn(`Falha ao buscar item do catálogo Epic ${item.catalogItemId}`);
+    logger.warn(`Falha ao buscar item do catálogo Epic ${item.catalogItemId}`);
     return null;
   }
 }
