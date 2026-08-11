@@ -1,7 +1,13 @@
 import { prisma } from "@/lib/prisma";
-import { HeroBanner, StatsCard, PlatformBreakdown } from "@/components/dashboard";
+import {
+  HeroBanner,
+  StatsCard,
+  PlatformBreakdown,
+} from "@/components/dashboard";
 import { Gamepad2, Layers, Clock } from "lucide-react";
 import { formatPlaytime } from "@/lib/format";
+
+export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const [totalGames, platformGroups, playtimeAgg] = await Promise.all([
