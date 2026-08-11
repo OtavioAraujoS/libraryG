@@ -13,13 +13,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Sync all platforms
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          SYNC_SECRET: ${{ secrets.SYNC_SECRET }}
         run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" \
-            -X POST "${{ secrets.APP_URL }}/api/sync/all" \
-            -H "Authorization: Bearer ${{ secrets.SYNC_SECRET }}")
-          echo "Response status: $response"
-          if [ "$response" != "200" ]; then
-            echo "Sync failed with status $response"
+          if [ -z "$APP_URL" ]; then
+            echo "❌ Erro: O secret APP_URL não foi configurado nos Secrets do GitHub!"
+            echo "Vá em Settings -> Secrets and variables -> Actions e adicione o secret APP_URL (ex: https://sua-app.netlify.app)."
             exit 1
           fi
-          echo "Sync completed successfully"
+
+          # Remove barra no final da URL caso exista
+          CLEAN_URL="${APP_URL%/}/api/sync/all"
+
+          echo "🚀 Disparando sincronização para: $CLEAN_URL"
+
+          if [ -n "$SYNC_SECRET" ]; then
+            response=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$CLEAN_URL" -H "Authorization: Bearer $SYNC_SECRET")
+          else
+            response=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$CLEAN_URL")
+          fi
+
+          echo "Status de resposta: $response"
+
+          if [ "$response" != "200" ]; then
+            echo "❌ Sincronização falhou com código $response"
+            exit 1
+          fi
+
+          echo "✅ Sincronização concluída com sucesso!"
