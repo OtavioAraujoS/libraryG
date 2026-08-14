@@ -51,6 +51,10 @@ model GameOnPlatform {
   playtime2WeeksMinutes  Int?
   lastPlayedAt           DateTime?
 
+  isShared               Boolean  @default(false)
+  ownerSteamId           String?
+  ownerName              String?
+
   lastSyncedAt           DateTime @default(now())
 
   @@unique([platform, externalId])
