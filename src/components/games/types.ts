@@ -18,3 +18,13 @@ export interface PlatformBadgeProps {
   platform: PlatformFilter;
   className?: string;
 }
+
+export interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  totalItems?: number;
+  pageSize?: number;
+  className?: string;
+  siblingCount?: number;
+}

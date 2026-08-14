@@ -1,12 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { LayoutGrid, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FilterPanel, GameGrid, SearchBar } from "@/components/games";
+import {
+  FilterPanel,
+  GameGrid,
+  Pagination,
+  SearchBar,
+} from "@/components/games";
 import { useGames, useGenres } from "@/hooks";
 import { cn } from "@/lib/utils";
 import type { ViewMode } from "@/components/games";
+
+const ITEMS_PER_PAGE = 10;
 
 export default function LibraryPage() {
   const {
@@ -22,7 +29,25 @@ export default function LibraryPage() {
     setGenres,
   } = useGames();
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [currentPage, setCurrentPage] = useState(1);
   const { availableGenres } = useGenres();
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, platforms, genres]);
+
+  const totalPages = Math.max(1, Math.ceil(games.length / ITEMS_PER_PAGE));
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(1);
+    }
+  }, [currentPage, totalPages]);
+
+  const paginatedGames = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return games.slice(start, start + ITEMS_PER_PAGE);
+  }, [games, currentPage]);
 
   return (
     <div className="flex flex-col gap-6 px-6 py-8">
@@ -87,11 +112,21 @@ export default function LibraryPage() {
       </div>
 
       <GameGrid
-        games={games}
+        games={paginatedGames}
         loading={loading}
         error={error}
         viewMode={viewMode}
       />
+
+      {!loading && !error && games.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={games.length}
+          pageSize={ITEMS_PER_PAGE}
+          onPageChange={setCurrentPage}
+        />
+      )}
     </div>
   );
 }
