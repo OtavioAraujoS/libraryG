@@ -47,9 +47,11 @@ model GameOnPlatform {
 
   externalId    String
 
-  playtimeMinutes Int?
+  playtimeMinutes        Int?
+  playtime2WeeksMinutes  Int?
+  lastPlayedAt           DateTime?
 
-  lastSyncedAt  DateTime @default(now())
+  lastSyncedAt           DateTime @default(now())
 
   @@unique([platform, externalId])
   @@index([gameId])
