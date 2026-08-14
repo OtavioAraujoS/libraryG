@@ -7,6 +7,7 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
+    "auth:steam": "node scripts/steam_auth.mjs",
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -33,9 +34,11 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/selenium-webdriver": "^4.35.6",
     "eslint": "^9",
     "eslint-config-next": "16.2.12",
     "prisma": "^7.9.1",
+    "selenium-webdriver": "^4.47.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

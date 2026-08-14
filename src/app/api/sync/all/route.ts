@@ -21,6 +21,11 @@ export async function POST(req: NextRequest) {
       fetchSteamLibrary().then((games) =>
         syncGames(games, Platform.STEAM, (g) => ({
           playtimeMinutes: g.playtimeMinutes,
+          playtime2WeeksMinutes: g.playtime2WeeksMinutes,
+          lastPlayedAt: g.lastPlayedAt,
+          isShared: g.isShared,
+          ownerSteamId: g.ownerSteamId,
+          ownerName: g.ownerName,
         })),
       ),
       fetchEpicLibrary().then((games) => syncGames(games, Platform.EPIC)),

@@ -10,6 +10,11 @@ export interface SyncResult {
 
 interface GameOnPlatformExtra {
   playtimeMinutes?: number;
+  playtime2WeeksMinutes?: number;
+  lastPlayedAt?: Date;
+  isShared?: boolean;
+  ownerSteamId?: string;
+  ownerName?: string;
 }
 
 export async function syncGames(
@@ -28,16 +33,25 @@ export async function syncGames(
     const gameRecord = existingGame
       ? await prisma.game.update({
           where: { id: existingGame.id },
-          data: { coverImage: game.coverImage ?? existingGame.coverImage },
+          data: {
+            coverImage: game.coverImage ?? existingGame.coverImage,
+            bannerImage: game.bannerImage ?? existingGame.bannerImage,
+          },
         })
       : await prisma.game.create({
           data: {
             title: game.title,
             coverImage: game.coverImage,
+            bannerImage: game.bannerImage,
           },
         });
 
-    const extraFields = extra(game);
+    const extraFields = {
+      isShared: game.isShared ?? false,
+      ownerSteamId: game.ownerSteamId,
+      ownerName: game.ownerName,
+      ...extra(game),
+    };
 
     await prisma.gameOnPlatform.upsert({
       where: {
@@ -58,7 +72,11 @@ export async function syncGames(
       },
     });
 
-    existingGame ? updated++ : created++;
+    if (existingGame) {
+      updated++;
+    } else {
+      created++;
+    }
   }
 
   return { total: games.length, created, updated };

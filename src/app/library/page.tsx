@@ -12,6 +12,7 @@ import {
 import { useGames, useGenres } from "@/hooks";
 import { cn } from "@/lib/utils";
 import type { ViewMode } from "@/components/games";
+import type { PlatformFilter } from "@/types";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -32,22 +33,30 @@ export default function LibraryPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const { availableGenres } = useGenres();
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, platforms, genres]);
-
   const totalPages = Math.max(1, Math.ceil(games.length / ITEMS_PER_PAGE));
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(1);
-    }
-  }, [currentPage, totalPages]);
+  const safeCurrentPage = Math.min(currentPage, totalPages);
 
   const paginatedGames = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const start = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
     return games.slice(start, start + ITEMS_PER_PAGE);
-  }, [games, currentPage]);
+  }, [games, safeCurrentPage]);
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+  };
+
+  const handlePlatformsChange = (
+    newPlatforms: React.SetStateAction<PlatformFilter[]>,
+  ) => {
+    setPlatforms(newPlatforms);
+    setCurrentPage(1);
+  };
+
+  const handleGenresChange = (newGenres: React.SetStateAction<string[]>) => {
+    setGenres(newGenres);
+    setCurrentPage(1);
+  };
 
   return (
     <div className="flex flex-col gap-6 px-6 py-8">
@@ -67,7 +76,7 @@ export default function LibraryPage() {
           <div className="flex items-center gap-2">
             <SearchBar
               value={searchQuery}
-              onChange={setSearchQuery}
+              onChange={handleSearchChange}
               className="w-full sm:w-64"
             />
 
@@ -104,9 +113,9 @@ export default function LibraryPage() {
 
         <FilterPanel
           platforms={platforms}
-          onPlatformsChange={setPlatforms}
+          onPlatformsChange={handlePlatformsChange}
           genres={genres}
-          onGenresChange={setGenres}
+          onGenresChange={handleGenresChange}
           availableGenres={availableGenres}
         />
       </div>
@@ -120,9 +129,9 @@ export default function LibraryPage() {
 
       {!loading && !error && games.length > 0 && (
         <Pagination
-          currentPage={currentPage}
+          currentPage={safeCurrentPage}
           totalPages={totalPages}
-          totalItems={games.length}
+          totalItems={total}
           pageSize={ITEMS_PER_PAGE}
           onPageChange={setCurrentPage}
         />
