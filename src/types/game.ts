@@ -12,6 +12,10 @@ export interface NormalizedGame {
   playtimeMinutes?: number;
   playtime2WeeksMinutes?: number;
   lastPlayedAt?: Date;
+  isShared?: boolean;
+  ownerSteamIds?: string[];
+  ownerSteamId?: string;
+  ownerName?: string;
 }
 
 export interface GameDTO {

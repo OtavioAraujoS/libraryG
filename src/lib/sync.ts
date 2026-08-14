@@ -12,6 +12,9 @@ interface GameOnPlatformExtra {
   playtimeMinutes?: number;
   playtime2WeeksMinutes?: number;
   lastPlayedAt?: Date;
+  isShared?: boolean;
+  ownerSteamId?: string;
+  ownerName?: string;
 }
 
 export async function syncGames(
@@ -43,7 +46,12 @@ export async function syncGames(
           },
         });
 
-    const extraFields = extra(game);
+    const extraFields = {
+      isShared: game.isShared ?? false,
+      ownerSteamId: game.ownerSteamId,
+      ownerName: game.ownerName,
+      ...extra(game),
+    };
 
     await prisma.gameOnPlatform.upsert({
       where: {
