@@ -8,18 +8,19 @@ import { cn } from "@/lib/utils";
 import type { GameCardProps } from "./types";
 
 export function GameCard({ game, viewMode }: GameCardProps) {
+  const cover = game.coverImage ?? game.coverUrl;
   const totalPlaytime = game.platforms.reduce(
     (sum, p) => sum + p.playtimeMinutes,
-    0
+    0,
   );
 
   if (viewMode === "list") {
     return (
       <Card className="group flex items-center gap-4 border-border bg-card p-3 transition-colors hover:border-primary/50">
-        <div className="relative h-16 w-12 flex-shrink-0 overflow-hidden rounded-sm bg-secondary">
-          {game.coverUrl && (
+        <div className="relative h-16 w-12 shrink-0 overflow-hidden rounded-sm bg-secondary">
+          {cover && (
             <Image
-              src={game.coverUrl}
+              src={cover}
               alt={game.title}
               fill
               className="object-cover"
@@ -36,7 +37,7 @@ export function GameCard({ game, viewMode }: GameCardProps) {
           </p>
         </div>
 
-        <div className="hidden flex-shrink-0 gap-1 sm:flex">
+        <div className="hidden shrink-0 gap-1 sm:flex">
           {game.platforms.map((p) => (
             <PlatformBadge key={p.id} platform={p.platform} />
           ))}
@@ -49,13 +50,13 @@ export function GameCard({ game, viewMode }: GameCardProps) {
     <Card
       className={cn(
         "group relative overflow-hidden border-border bg-card p-0 transition-all",
-        "hover:border-primary/60 hover:shadow-[0_0_24px_-4px_hsl(var(--primary))]"
+        "hover:border-primary/60 hover:shadow-[0_0_24px_-4px_hsl(var(--primary))]",
       )}
     >
-      <div className="relative aspect-[2/3] w-full bg-secondary">
-        {game.coverUrl ? (
+      <div className="relative aspect-2/3 w-full bg-secondary">
+        {cover ? (
           <Image
-            src={game.coverUrl}
+            src={cover}
             alt={game.title}
             fill
             className="object-cover transition-transform duration-300 motion-safe:group-hover:scale-105"
@@ -67,7 +68,7 @@ export function GameCard({ game, viewMode }: GameCardProps) {
           </div>
         )}
 
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/95 via-background/60 to-transparent p-3 pt-8">
+        <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-background/95 via-background/60 to-transparent p-3 pt-8">
           <p className="truncate text-sm font-medium text-foreground">
             {game.title}
           </p>

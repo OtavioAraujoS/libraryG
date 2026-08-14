@@ -32,22 +32,13 @@ export default function LibraryPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const { availableGenres } = useGenres();
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, platforms, genres]);
-
   const totalPages = Math.max(1, Math.ceil(games.length / ITEMS_PER_PAGE));
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(1);
-    }
-  }, [currentPage, totalPages]);
+  const safeCurrentPage = Math.min(currentPage, totalPages);
 
   const paginatedGames = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const start = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
     return games.slice(start, start + ITEMS_PER_PAGE);
-  }, [games, currentPage]);
+  }, [games, safeCurrentPage]);
 
   return (
     <div className="flex flex-col gap-6 px-6 py-8">
@@ -120,7 +111,7 @@ export default function LibraryPage() {
 
       {!loading && !error && games.length > 0 && (
         <Pagination
-          currentPage={currentPage}
+          currentPage={safeCurrentPage}
           totalPages={totalPages}
           totalItems={games.length}
           pageSize={ITEMS_PER_PAGE}

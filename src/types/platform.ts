@@ -5,5 +5,7 @@ export interface GameOnPlatformDTO {
   platform: PlatformFilter;
   externalId: string;
   playtimeMinutes: number;
+  playtime2WeeksMinutes?: number | null;
+  lastPlayedAt?: string | null;
   lastSyncedAt: string;
 }

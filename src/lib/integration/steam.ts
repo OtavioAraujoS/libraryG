@@ -41,11 +41,17 @@ export async function fetchSteamLibrary(): Promise<NormalizedGame[]> {
         externalId: String(game.appid),
         platform: "STEAM",
         coverImage: `https://cdn.cloudflare.steamstatic.com/steam/apps/${game.appid}/library_600x900.jpg`,
+        bannerImage: `https://cdn.cloudflare.steamstatic.com/steam/apps/${game.appid}/header.jpg`,
         playtimeMinutes: game.playtime_forever,
+        playtime2WeeksMinutes: game.playtime_2weeks,
+        lastPlayedAt: game.rtime_last_played
+          ? new Date(game.rtime_last_played * 1000)
+          : undefined,
       }),
     );
-  } catch (error: any) {
-    logger.error("Falha ao buscar biblioteca real da Steam API", error?.message || error);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    logger.error("Falha ao buscar biblioteca real da Steam API", message);
     throw error;
   }
 }

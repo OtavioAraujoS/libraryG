@@ -14,6 +14,8 @@ export async function POST(req: NextRequest) {
     const games = await fetchSteamLibrary();
     const result = await syncGames(games, Platform.STEAM, (game) => ({
       playtimeMinutes: game.playtimeMinutes,
+      playtime2WeeksMinutes: game.playtime2WeeksMinutes,
+      lastPlayedAt: game.lastPlayedAt,
     }));
 
     return NextResponse.json({ success: true, ...result });
