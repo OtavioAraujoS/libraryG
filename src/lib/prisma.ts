@@ -5,8 +5,11 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
+const dbUrl =
+  process.env.TURSO_DATABASE_URL || process.env.DATABASE_URL || "file:./dev.db";
+
 const adapter = new PrismaLibSql({
-  url: process.env.TURSO_DATABASE_URL!,
+  url: dbUrl,
   authToken: process.env.TURSO_AUTH_TOKEN,
 });
 

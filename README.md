@@ -16,6 +16,47 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Running with Docker
+
+### Prerequisites
+- [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/) installed.
+- Configure your `.env` file (copy from `.env.example`):
+  ```bash
+  cp .env.example .env
+  ```
+
+### Run with Docker Compose (Recommended)
+
+1. Build and start the container in background:
+   ```bash
+   docker compose up -d --build
+   ```
+
+2. Access the application:
+   - [http://localhost:3000](http://localhost:3000)
+
+3. View logs:
+   ```bash
+   docker compose logs -f
+   ```
+
+4. Stop the container:
+   ```bash
+   docker compose down
+   ```
+
+### Run with Docker CLI
+
+1. Build the Docker image:
+   ```bash
+   docker build -t libraryg:latest .
+   ```
+
+2. Run the container:
+   ```bash
+   docker run -d --name libraryg-app -p 3000:3000 --env-file .env libraryg:latest
+   ```
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

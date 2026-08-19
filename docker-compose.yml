@@ -1,0 +1,35 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: libraryg-app
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      - TURSO_DATABASE_URL=${TURSO_DATABASE_URL:-}
+      - TURSO_AUTH_TOKEN=${TURSO_AUTH_TOKEN:-}
+      - DATABASE_URL=${DATABASE_URL:-}
+      - STEAM_API_KEY=${STEAM_API_KEY:-}
+      - STEAM_ID=${STEAM_ID:-}
+      - STEAM_ACCESS_TOKEN=${STEAM_ACCESS_TOKEN:-}
+      - STEAM_FAMILY_GROUP_ID=${STEAM_FAMILY_GROUP_ID:-}
+      - GOG_CLIENT_ID=${GOG_CLIENT_ID:-}
+      - GOG_CLIENT_SECRET=${GOG_CLIENT_SECRET:-}
+      - EPIC_CLIENT_ID=${EPIC_CLIENT_ID:-}
+      - EPIC_CLIENT_SECRET=${EPIC_CLIENT_SECRET:-}
+      - EPIC_REFRESH_TOKEN=${EPIC_REFRESH_TOKEN:-}
+      - SYNC_SECRET=${SYNC_SECRET:-}
+    env_file:
+      - path: .env
+        required: false
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
