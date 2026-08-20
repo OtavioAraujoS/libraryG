@@ -24,8 +24,10 @@ export function SyncButton() {
 
       toast.success("Sincronização concluída com sucesso!", { id: toastId });
       router.refresh();
-    } catch (err: any) {
-      toast.error(err.message || "Falha ao sincronizar.", { id: toastId });
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Falha ao sincronizar.";
+      toast.error(message, { id: toastId });
     } finally {
       setLoading(false);
     }

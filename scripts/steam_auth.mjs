@@ -1,8 +1,8 @@
-import { Builder, By, until } from "selenium-webdriver";
+import { Builder } from "selenium-webdriver";
 import chrome from "selenium-webdriver/chrome.js";
 import edge from "selenium-webdriver/edge.js";
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 
 const ENV_PATH = path.resolve(process.cwd(), ".env");
 
@@ -49,6 +49,82 @@ async function createDriver() {
   }
 }
 
+async function waitForSteamAccessToken(driver, timeoutMs = 180000) {
+  const startTime = Date.now();
+
+  while (Date.now() - startTime < timeoutMs) {
+    const currentUrl = await driver.getCurrentUrl();
+
+    if (!currentUrl.includes("/login")) {
+      console.log("Login detectado! Extraindo tokens da sessão Steam...");
+
+      const result = await driver.executeAsyncScript((callback) => {
+        fetch("https://store.steampowered.com/pointssummary/ajaxgetasyncconfig")
+          .then((r) => r.json())
+          .then((data) => {
+            const token = data?.data?.webapi_token || null;
+            callback({ success: true, token, data });
+          })
+          .catch((err) => callback({ success: false, error: err.message }));
+      });
+
+      if (result?.token) {
+        console.log("Token de acesso (STEAM_ACCESS_TOKEN) obtido com sucesso!");
+        return result.token;
+      }
+    }
+
+    await driver.sleep(2000);
+  }
+
+  return null;
+}
+
+async function extractSteamId(driver) {
+  const cookies = await driver.manage().getCookies();
+  const loginSecureCookie = cookies.find((c) => c.name === "steamLoginSecure");
+  if (!loginSecureCookie) return null;
+
+  const decoded = decodeURIComponent(loginSecureCookie.value);
+  const match = new RegExp(/^(\d{17})/).exec(decoded);
+  if (match) {
+    const steamId = match[1];
+    console.log(`Steam ID identificado: ${steamId}`);
+    return steamId;
+  }
+  return null;
+}
+
+async function fetchFamilyGroupId(driver, accessToken) {
+  console.log("Consultando grupo familiar via IFamilyGroupsService...");
+  try {
+    const familyRes = await driver.executeAsyncScript((token, callback) => {
+      fetch(
+        `https://api.steampowered.com/IFamilyGroupsService/GetFamilyGroupForUser/v1/?access_token=${token}&include_family_group_response=true`,
+      )
+        .then((r) => r.json())
+        .then((data) => callback({ success: true, data }))
+        .catch((err) => callback({ success: false, error: err.message }));
+    }, accessToken);
+
+    const familyGroupId =
+      familyRes?.data?.response?.family_group?.family_groupid ??
+      familyRes?.data?.response?.family_groupid;
+
+    if (familyGroupId) {
+      const idStr = String(familyGroupId);
+      console.log(`ID do Grupo Familiar encontrado: ${idStr}`);
+      return idStr;
+    }
+  } catch (familyErr) {
+    console.log(
+      "Não foi possível consultar grupo familiar:",
+      familyErr.message,
+    );
+  }
+  return null;
+}
+
 async function main() {
   let driver;
   try {
@@ -63,88 +139,15 @@ async function main() {
 
     await driver.get("https://store.steampowered.com/login/");
 
-    const timeoutMs = 180000; // 3 minutos
-    const startTime = Date.now();
-    let accessToken = null;
-    let steamId = null;
-
-    while (Date.now() - startTime < timeoutMs) {
-      const currentUrl = await driver.getCurrentUrl();
-
-      if (!currentUrl.includes("/login")) {
-        console.log("Login detectado! Extraindo tokens da sessão Steam...");
-
-        const result = await driver.executeAsyncScript((callback) => {
-          fetch(
-            "https://store.steampowered.com/pointssummary/ajaxgetasyncconfig",
-          )
-            .then((r) => r.json())
-            .then((data) => {
-              const token = data?.data?.webapi_token || null;
-              callback({ success: true, token, data });
-            })
-            .catch((err) => callback({ success: false, error: err.message }));
-        });
-
-        if (result && result.token) {
-          accessToken = result.token;
-          console.log(
-            "Token de acesso (STEAM_ACCESS_TOKEN) obtido com sucesso!",
-          );
-          break;
-        }
-      }
-
-      await driver.sleep(2000);
-    }
-
+    const accessToken = await waitForSteamAccessToken(driver);
     if (!accessToken) {
       throw new Error(
         "Tempo limite de login esgotado ou token não encontrado.",
       );
     }
 
-    const cookies = await driver.manage().getCookies();
-    const loginSecureCookie = cookies.find(
-      (c) => c.name === "steamLoginSecure",
-    );
-    if (loginSecureCookie) {
-      const decoded = decodeURIComponent(loginSecureCookie.value);
-      const match = decoded.match(/^(\d{17})/);
-      if (match) {
-        steamId = match[1];
-        console.log(`Steam ID identificado: ${steamId}`);
-      }
-    }
-
-    console.log("Consultando grupo familiar via IFamilyGroupsService...");
-    let familyGroupId = null;
-    try {
-      const familyRes = await driver.executeAsyncScript((token, callback) => {
-        fetch(
-          `https://api.steampowered.com/IFamilyGroupsService/GetFamilyGroupForUser/v1/?access_token=${token}&include_family_group_response=true`,
-        )
-          .then((r) => r.json())
-          .then((data) => callback({ success: true, data }))
-          .catch((err) => callback({ success: false, error: err.message }));
-      }, accessToken);
-
-      if (
-        familyRes?.data?.response?.family_groupid ||
-        familyRes?.data?.response?.family_group?.family_groupid
-      ) {
-        familyGroupId = String(
-          familyRes.data.response.family_group?.family_groupid ??
-            familyRes.data.response.family_groupid,
-        );
-        console.log(`ID do Grupo Familiar encontrado: ${familyGroupId}`);
-      }
-    } catch (familyErr) {
-      console.log(
-        "Não foi possível consultar grupo familiar:",
-        familyErr.message,
-      );
-    }
+    const steamId = await extractSteamId(driver);
+    const familyGroupId = await fetchFamilyGroupId(driver, accessToken);
 
     const envUpdates = {
       STEAM_ACCESS_TOKEN: accessToken,
@@ -172,4 +175,4 @@ async function main() {
   }
 }
 
-main();
+await main();
