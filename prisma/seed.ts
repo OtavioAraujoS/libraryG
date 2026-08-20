@@ -65,7 +65,7 @@ async function main() {
     if (assignedGenreNames.length === 0) {
       const charSum = game.title
         .split("")
-        .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        .reduce((acc, char) => acc + (char.codePointAt(0) ?? 0), 0);
       const firstGenreIndex = charSum % GENRES.length;
       const secondGenreIndex = (charSum + 3) % GENRES.length;
 
