@@ -5,8 +5,7 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-const databaseUrl =
-  process.env.TURSO_DATABASE_URL || process.env.DATABASE_URL;
+const databaseUrl = process.env.TURSO_DATABASE_URL || process.env.DATABASE_URL;
 const authToken = process.env.TURSO_AUTH_TOKEN;
 
 if (!databaseUrl) {
@@ -29,4 +28,3 @@ export const prisma =
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }
-
