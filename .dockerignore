@@ -6,6 +6,9 @@ generated
 .agents
 .claude
 .windsurf
+.vscode
+.idea
+.cursor
 *.db
 *.db-journal
 *.tsbuildinfo
@@ -23,5 +26,7 @@ yarn-error.log*
 lista.tsx
 Dockerfile*
 docker-compose*.yml
+README.md
+*.md
 .env*
 !.env.example

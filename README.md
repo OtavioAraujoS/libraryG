@@ -25,29 +25,34 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
   cp .env.example .env
   ```
 
-### Run with Docker Compose (Recommended)
+### Quick Start with Docker
 
-1. Build and start the container in background:
-   ```bash
-   docker compose up -d --build
-   ```
+#### 1. Development Mode (Fast startup + Hot-Reload)
+Starts the app in development mode using the mounted volume, so any code changes reflect immediately without rebuilding the image:
+```bash
+npm run docker:dev
+# or
+docker compose -f docker-compose.dev.yml up
+```
 
-2. Access the application:
-   - [http://localhost:3000](http://localhost:3000)
+#### 2. Production Mode (Standalone Build + Caching)
+Runs the optimized production standalone image:
+```bash
+npm run docker
+# or (to force rebuild)
+npm run docker:build
+# or
+docker compose up --build
+```
 
-3. View logs:
-   ```bash
-   docker compose logs -f
-   ```
-
-4. Stop the container:
-   ```bash
-   docker compose down
-   ```
+#### 3. Stop Containers
+```bash
+npm run docker:down
+```
 
 ### Run with Docker CLI
 
-1. Build the Docker image:
+1. Build the Docker image (uses BuildKit caching for npm and Next.js builds):
    ```bash
    docker build -t libraryg:latest .
    ```

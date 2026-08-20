@@ -3,13 +3,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: runner
-    container_name: libraryg-app
+      target: dev
+    container_name: libraryg-dev
     restart: unless-stopped
     ports:
       - "${PORT:-3000}:3000"
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - PORT=3000
       - HOSTNAME=0.0.0.0
       - TURSO_DATABASE_URL=${TURSO_DATABASE_URL:-}
@@ -28,9 +28,20 @@ services:
     env_file:
       - path: .env
         required: false
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 15s
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+      - /app/generated
+    develop:
+      watch:
+        - action: sync
+          path: ./src
+          target: /app/src
+        - action: sync
+          path: ./public
+          target: /app/public
+        - action: rebuild
+          path: ./package.json
+        - action: rebuild
+          path: ./prisma/schema.prisma
