@@ -59,6 +59,10 @@ model GameOnPlatform {
 
   @@unique([platform, externalId])
   @@index([gameId])
+  @@index([platform])
+  @@index([playtimeMinutes])
+  @@index([isShared])
+  @@index([ownerSteamId])
 }
 
 model Genre {
