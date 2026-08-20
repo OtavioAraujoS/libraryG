@@ -5,12 +5,18 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-const dbUrl =
-  process.env.TURSO_DATABASE_URL || process.env.DATABASE_URL || "file:./dev.db";
+const databaseUrl = process.env.TURSO_DATABASE_URL || process.env.DATABASE_URL;
+const authToken = process.env.TURSO_AUTH_TOKEN;
+
+if (!databaseUrl) {
+  console.warn(
+    "[Prisma] Aviso: Nenhuma URL de banco de dados (TURSO_DATABASE_URL ou DATABASE_URL) foi configurada no ambiente.",
+  );
+}
 
 const adapter = new PrismaLibSql({
-  url: dbUrl,
-  authToken: process.env.TURSO_AUTH_TOKEN,
+  url: databaseUrl || "file:./dev.db",
+  authToken,
 });
 
 export const prisma =

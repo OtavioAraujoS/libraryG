@@ -35,8 +35,40 @@ export function useDashboard(): UseDashboardResult {
   }, []);
 
   useEffect(() => {
-    fetchDashboardMetrics();
-  }, [fetchDashboardMetrics]);
+    let ignore = false;
+
+    async function loadInitialMetrics() {
+      try {
+        const response = await axios.get("/api/dashboard");
+        if (!ignore) {
+          if (!response.data.success) {
+            throw new Error(
+              response.data.error ?? "Erro ao carregar dados do dashboard.",
+            );
+          }
+          setData(response.data.data);
+        }
+      } catch (err: unknown) {
+        if (!ignore) {
+          const errorMessage =
+            axios.isAxiosError(err) && err.response?.data?.error
+              ? err.response.data.error
+              : "Não foi possível carregar as métricas do painel.";
+          setError(errorMessage);
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadInitialMetrics();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   return {
     data,

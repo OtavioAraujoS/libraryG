@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -9,20 +9,28 @@ import { formatPlaytime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { GameCardProps } from "./types";
 
-export function GameCard({ game, viewMode }: GameCardProps) {
-  const initialCover =
+export function GameCard({ game, viewMode }: Readonly<GameCardProps>) {
+  const defaultCover =
     game.coverImage ?? game.coverUrl ?? game.bannerImage ?? null;
-  const [imgSrc, setImgSrc] = useState<string | null>(initialCover);
+  const [hasPrimaryError, setHasPrimaryError] = useState(false);
+  const [hasBannerError, setHasBannerError] = useState(false);
 
-  useEffect(() => {
-    setImgSrc(game.coverImage ?? game.coverUrl ?? game.bannerImage ?? null);
-  }, [game.coverImage, game.coverUrl, game.bannerImage]);
+  let imgSrc: string | null = null;
+  if (!hasPrimaryError) {
+    imgSrc = defaultCover;
+  } else if (
+    !hasBannerError &&
+    game.bannerImage &&
+    game.bannerImage !== defaultCover
+  ) {
+    imgSrc = game.bannerImage;
+  }
 
   const handleImageError = () => {
-    if (imgSrc && game.bannerImage && imgSrc !== game.bannerImage) {
-      setImgSrc(game.bannerImage);
+    if (!hasPrimaryError) {
+      setHasPrimaryError(true);
     } else {
-      setImgSrc(null);
+      setHasBannerError(true);
     }
   };
 

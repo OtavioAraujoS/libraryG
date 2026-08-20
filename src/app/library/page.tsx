@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { LayoutGrid, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -58,6 +58,8 @@ export default function LibraryPage() {
     setCurrentPage(1);
   };
 
+  const gameCountLabel = total === 1 ? "jogo" : "jogos";
+
   return (
     <div className="flex flex-col gap-6 px-6 py-8">
       <div className="flex flex-col gap-4">
@@ -67,9 +69,7 @@ export default function LibraryPage() {
               Biblioteca
             </h1>
             <p className="text-sm text-muted-foreground">
-              {loading
-                ? "Carregando..."
-                : `${total} ${total === 1 ? "jogo" : "jogos"}`}
+              {loading ? "Carregando..." : `${total} ${gameCountLabel}`}
             </p>
           </div>
 

@@ -1,11 +1,25 @@
 type LogLevel = "info" | "warn" | "error";
 
+function formatContext(context: unknown): unknown {
+  if (context instanceof Error) {
+    return {
+      name: context.name,
+      message: context.message,
+      stack: context.stack,
+      ...(context as unknown as Record<string, unknown>),
+    };
+  }
+  return context;
+}
+
 function log(level: LogLevel, message: string, context?: unknown): void {
+  const formattedContext =
+    context !== undefined ? formatContext(context) : undefined;
   const entry = {
     timestamp: new Date().toISOString(),
     level,
     message,
-    ...(context !== undefined ? { context } : {}),
+    ...(formattedContext !== undefined ? { context: formattedContext } : {}),
   };
 
   if (level === "error") {

@@ -54,7 +54,7 @@ async function main() {
   let updatedCount = 0;
 
   for (const game of games) {
-    let assignedGenreNames: string[] = [];
+    const assignedGenreNames: string[] = [];
 
     for (const [key, mappedGenres] of Object.entries(GENRE_MAPPINGS)) {
       if (game.title.toLowerCase().includes(key.toLowerCase())) {
@@ -65,7 +65,7 @@ async function main() {
     if (assignedGenreNames.length === 0) {
       const charSum = game.title
         .split("")
-        .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        .reduce((acc, char) => acc + (char.codePointAt(0) ?? 0), 0);
       const firstGenreIndex = charSum % GENRES.length;
       const secondGenreIndex = (charSum + 3) % GENRES.length;
 
@@ -88,6 +88,8 @@ async function main() {
 
     updatedCount++;
   }
+
+  console.log(`Seed concluído com sucesso: ${updatedCount} jogos atualizados.`);
 }
 
 main()
