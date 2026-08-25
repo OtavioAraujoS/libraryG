@@ -1,29 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🎮 LibraryG — Centralizador de Bibliotecas de Jogos
 
-## Getting Started
+Centralize e gerencie todos os seus jogos da **Steam**, **Epic Games** e **GOG** em um único painel moderno com suporte à Família Steam e estatísticas de tempo de jogo.
 
-First, run the development server:
+---
 
+## 🚀 Guia Rápido de Instalação (Passo a Passo)
+
+### 1. Instalar as Dependências
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Configurar o Ambiente
+Copie o arquivo de exemplo para criar o `.env`:
+```bash
+cp .env.example .env
+```
+*(Opcional: preencha suas chaves da Steam, Epic Games e GOG para sincronização).*
 
-## Running with Docker
+### 3. Inicializar o Banco de Dados (SQLite local)
+Crie as tabelas locais executando o comando de setup:
+```bash
+npm run setup
+# ou
+npx prisma db push
+```
 
-### Prerequisites
-- [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/) installed.
-- Configure your `.env` file (copy from `.env.example`):
-  ```bash
-  cp .env.example .env
-  ```
+### 4. Iniciar o Servidor de Desenvolvimento
+```bash
+npm run dev
+```
+
+Abra **[http://localhost:3000](http://localhost:3000)** no seu navegador para ver o painel!
+
+---
+
+## 🛠️ Comandos Úteis
+
+| Comando | Descrição |
+|---|---|
+| `npm run dev` | Inicia o servidor Next.js em modo desenvolvimento (watch mode / hot reload) |
+| `npm run setup` | Gera o Prisma Client e sincroniza as tabelas do banco local |
+| `npm run db:push` | Sincroniza o schema do Prisma com o banco de dados |
+| `npm run db:studio` | Abre a interface gráfica do Prisma Studio para visualizar e editar dados |
+| `npm run build` | Compila a aplicação para produção |
+| `npm run start` | Inicia a aplicação compilada em produção |
+
+---
 
 ### Quick Start with Docker
 

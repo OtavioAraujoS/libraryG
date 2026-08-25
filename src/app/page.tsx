@@ -6,6 +6,7 @@ import {
   PlatformBreakdown,
   FamilyBreakdown,
   RecentGamesSection,
+  SetupGuideCard,
 } from "@/components/dashboard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDashboard } from "@/hooks";
@@ -13,7 +14,7 @@ import { formatPlaytime } from "@/lib/format";
 import { Gamepad2, Layers, Clock, Users } from "lucide-react";
 
 export default function DashboardPage() {
-  const { data, loading, error } = useDashboard();
+  const { data, loading, error, errorCode, errorHint, refetch } = useDashboard();
 
   if (loading) {
     return <DashboardSkeleton />;
@@ -21,11 +22,13 @@ export default function DashboardPage() {
 
   if (error || !data) {
     return (
-      <div className="flex flex-col items-center gap-2 rounded-2xl border border-destructive/30 bg-destructive/5 py-16 text-center">
-        <p className="font-medium text-destructive">
-          Não foi possível carregar as métricas do painel
-        </p>
-        <p className="text-sm text-muted-foreground">{error}</p>
+      <div className="space-y-8 px-6 py-8">
+        <SetupGuideCard
+          error={error}
+          errorCode={errorCode}
+          errorHint={errorHint}
+          onRetry={refetch}
+        />
       </div>
     );
   }
@@ -121,14 +124,41 @@ function DashboardSkeleton() {
 
 function EmptyState() {
   return (
-    <div className="rounded-2xl border border-dashed border-border bg-card/50 px-6 py-16 text-center">
-      <p className="text-lg font-medium text-foreground/90">
-        Nenhum jogo sincronizado ainda
-      </p>
-      <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-        Clique no botão &quot;Sincronizar agora&quot; acima para importar seus
-        jogos da Steam, Epic Games e GOG.
-      </p>
+    <div className="rounded-2xl border border-dashed border-border bg-card/50 p-8 sm:p-12 text-center">
+      <div className="mx-auto max-w-md space-y-4">
+        <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <Gamepad2 className="h-6 w-6" />
+        </div>
+
+        <h3 className="text-xl font-semibold text-foreground">
+          Nenhum jogo sincronizado ainda
+        </h3>
+
+        <p className="text-sm text-muted-foreground">
+          Sua base de dados está pronta! Para popular sua biblioteca, configure suas chaves de API no arquivo <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground">.env</code> e clique no botão <strong>&quot;Sincronizar agora&quot;</strong> acima.
+        </p>
+
+        <div className="mt-6 grid grid-cols-1 gap-3 text-left sm:grid-cols-3">
+          <div className="rounded-lg border border-border/70 bg-background/60 p-3">
+            <p className="text-xs font-semibold text-primary">1. Steam</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Preencha <code className="text-[10px] font-mono">STEAM_API_KEY</code> e <code className="text-[10px] font-mono">STEAM_ID</code> no .env
+            </p>
+          </div>
+          <div className="rounded-lg border border-border/70 bg-background/60 p-3">
+            <p className="text-xs font-semibold text-primary">2. Epic Games</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Adicione as credenciais Epic no .env para sync automático
+            </p>
+          </div>
+          <div className="rounded-lg border border-border/70 bg-background/60 p-3">
+            <p className="text-xs font-semibold text-primary">3. GOG</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Configure as credenciais GOG e importe seus títulos
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

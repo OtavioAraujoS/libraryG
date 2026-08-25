@@ -4,6 +4,19 @@ import { Platform } from "../../../../generated/prisma/enums";
 import type { Prisma } from "../../../../generated/prisma/client";
 import { logger } from "@/lib/logger";
 
+import { ensureDatabaseReady } from "@/lib/db-init";
+
+async function queryGames(where: Prisma.GameWhereInput) {
+  return prisma.game.findMany({
+    where,
+    include: {
+      platforms: true,
+      genres: true,
+    },
+    orderBy: { title: "asc" },
+  });
+}
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -52,14 +65,14 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    const games = await prisma.game.findMany({
-      where,
-      include: {
-        platforms: true,
-        genres: true,
-      },
-      orderBy: { title: "asc" },
-    });
+    let games;
+    try {
+      games = await queryGames(where);
+    } catch (primaryError) {
+      logger.warn("[GET /api/games] Falha na consulta, verificando banco...", primaryError);
+      await ensureDatabaseReady();
+      games = await queryGames(where);
+    }
 
     return NextResponse.json({
       success: true,
@@ -68,8 +81,24 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logger.error("[GET /api/games]", error);
+
+    const errorStr = error instanceof Error ? error.message : String(error);
+    const isDbError =
+      errorStr.includes("no such table") ||
+      errorStr.includes("SQLITE_ERROR") ||
+      errorStr.includes("database") ||
+      errorStr.includes("PrismaClient");
+
+    const errorMessage = isDbError
+      ? "Banco de dados não inicializado ou inacessível. Execute 'npm run db:push' para sincronizar as tabelas locais."
+      : "Erro ao buscar jogos.";
+
     return NextResponse.json(
-      { success: false, error: "Erro ao buscar jogos." },
+      {
+        success: false,
+        error: errorMessage,
+        code: isDbError ? "DATABASE_NOT_INITIALIZED" : "SERVER_ERROR",
+      },
       { status: 500 },
     );
   }

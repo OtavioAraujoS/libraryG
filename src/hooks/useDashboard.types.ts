@@ -24,5 +24,7 @@ export interface UseDashboardResult {
   data: DashboardMetrics | null;
   loading: boolean;
   error: string | null;
+  errorCode?: string | null;
+  errorHint?: string | null;
   refetch: () => Promise<void>;
 }
