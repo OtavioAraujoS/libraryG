@@ -1,5 +1,6 @@
 import { PrismaClient } from "../../generated/prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
+import { ensureDatabaseReady } from "./db-init";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -28,3 +29,5 @@ export const prisma =
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }
+
+ensureDatabaseReady().catch(() => {});

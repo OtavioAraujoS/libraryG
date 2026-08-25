@@ -83,78 +83,93 @@ function extractTopGames(gamesWithPlaytime: DashboardGameItem[], limit = 6) {
   return topGames;
 }
 
-export async function GET() {
-  try {
-    const [
-      totalGames,
-      platformGroups,
-      playtimeAgg,
-      familySharedCount,
-      familyMembersGroup,
-      gamesWithPlaytime,
-    ] = await Promise.all([
-      prisma.game.count(),
-      prisma.gameOnPlatform.groupBy({
-        by: ["platform"],
-        _count: { _all: true },
-      }),
-      prisma.gameOnPlatform.aggregate({
-        _sum: { playtimeMinutes: true },
-      }),
-      prisma.gameOnPlatform.count({
-        where: { isShared: true },
-      }),
-      prisma.gameOnPlatform.groupBy({
-        by: ["ownerName", "ownerSteamId", "isShared"],
-        where: {
-          platform: "STEAM",
-        },
-        _count: { _all: true },
-      }),
-      prisma.gameOnPlatform.findMany({
-        where: {
-          playtimeMinutes: { gt: 0 },
-        },
-        orderBy: {
-          playtimeMinutes: "desc",
-        },
-        take: 12,
-        include: {
-          game: {
-            include: {
-              platforms: true,
-              genres: true,
-            },
+import { ensureDatabaseReady } from "@/lib/db-init";
+
+async function fetchDashboardData() {
+  const [
+    totalGames,
+    platformGroups,
+    playtimeAgg,
+    familySharedCount,
+    familyMembersGroup,
+    gamesWithPlaytime,
+  ] = await Promise.all([
+    prisma.game.count(),
+    prisma.gameOnPlatform.groupBy({
+      by: ["platform"],
+      _count: { _all: true },
+    }),
+    prisma.gameOnPlatform.aggregate({
+      _sum: { playtimeMinutes: true },
+    }),
+    prisma.gameOnPlatform.count({
+      where: { isShared: true },
+    }),
+    prisma.gameOnPlatform.groupBy({
+      by: ["ownerName", "ownerSteamId", "isShared"],
+      where: {
+        platform: "STEAM",
+      },
+      _count: { _all: true },
+    }),
+    prisma.gameOnPlatform.findMany({
+      where: {
+        playtimeMinutes: { gt: 0 },
+      },
+      orderBy: {
+        playtimeMinutes: "desc",
+      },
+      take: 12,
+      include: {
+        game: {
+          include: {
+            platforms: true,
+            genres: true,
           },
         },
-      }),
-    ]);
+      },
+    }),
+  ]);
 
-    const platformData = platformGroups.map((group) => ({
-      platform: group.platform,
-      count: group._count._all,
-    }));
+  const platformData = platformGroups.map((group) => ({
+    platform: group.platform,
+    count: group._count._all,
+  }));
 
-    const totalPlatformLinks = platformData.reduce(
-      (sum, platform) => sum + platform.count,
-      0,
-    );
-    const totalMinutes = playtimeAgg._sum.playtimeMinutes ?? 0;
-    const familyData = buildFamilyMetrics(familyMembersGroup);
-    const topGames = extractTopGames(gamesWithPlaytime, 6);
+  const totalPlatformLinks = platformData.reduce(
+    (sum, platform) => sum + platform.count,
+    0,
+  );
+  const totalMinutes = playtimeAgg._sum.playtimeMinutes ?? 0;
+  const familyData = buildFamilyMetrics(familyMembersGroup);
+  const topGames = extractTopGames(gamesWithPlaytime, 6);
+
+  return {
+    totalGames,
+    totalPlatformLinks,
+    totalMinutes,
+    familySharedCount,
+    platformData,
+    familyData,
+    topGames,
+  };
+}
+
+export async function GET() {
+  try {
+    let data;
+    try {
+      data = await fetchDashboardData();
+    } catch (primaryError) {
+      logger.warn("[GET /api/dashboard] Primeira tentativa falhou, verificando inicialização do banco...", primaryError);
+      await ensureDatabaseReady();
+      data = await fetchDashboardData();
+    }
 
     return NextResponse.json(
       {
         success: true,
-        data: {
-          totalGames,
-          totalPlatformLinks,
-          totalMinutes,
-          familySharedCount,
-          platformData,
-          familyData,
-          topGames,
-        },
+        data,
       },
       {
         headers: {
@@ -164,8 +179,27 @@ export async function GET() {
     );
   } catch (error) {
     logger.error("[GET /api/dashboard]", error);
+
+    const errorStr = error instanceof Error ? error.message : String(error);
+    const isDbError =
+      errorStr.includes("no such table") ||
+      errorStr.includes("SQLITE_ERROR") ||
+      errorStr.includes("database") ||
+      errorStr.includes("PrismaClient");
+
+    const errorMessage = isDbError
+      ? "Banco de dados não inicializado ou inacessível. Execute 'npm run db:push' para sincronizar as tabelas locais ou verifique o arquivo .env."
+      : "Erro ao buscar métricas do dashboard.";
+
     return NextResponse.json(
-      { success: false, error: "Erro ao buscar métricas do dashboard." },
+      {
+        success: false,
+        error: errorMessage,
+        code: isDbError ? "DATABASE_NOT_INITIALIZED" : "SERVER_ERROR",
+        hint: isDbError
+          ? "Execute 'npm run db:push' ou 'npx prisma db push' no terminal para criar as tabelas locais."
+          : undefined,
+      },
       { status: 500 },
     );
   }
